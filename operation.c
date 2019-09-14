@@ -19,10 +19,9 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
   char *hispath=(char *)malloc(300*sizeof(char));
   sprintf(hispath,"%s/hist.txt",home_path);
   fd1=open(hispath,O_CREAT|O_RDWR|O_APPEND, 0777);
-
   char *command1=(char *)malloc(300*sizeof(char));
   strcpy(command1,command);
-
+  int file_output = 0;
   int args;
   char tokens[10][100];
   char *token=strtok(command1," ");
@@ -38,6 +37,21 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
     tokens[args-1][strlen(tokens[args-1])-1]='\0';
   }
 
+  if(tokens[args-2][0]=='>'&&tokens[args-2][1]=='>')
+  {
+    file_output=1;
+    freopen(tokens[args-1], "a+", stdout);
+    args=args-2;
+  }
+  else if(tokens[args-2][0]=='>')
+  {
+    file_output=1;
+    freopen(tokens[args-1], "w+", stdout);
+    args=args-2;
+  }
+
+
+  //Checking The Command
   if(!strcmp(tokens[0],"cd"))
   {
     if(args<2)
@@ -153,5 +167,9 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
         strcpy(procname[procid[0]],tokens[0]);
       }
     }
+  }
+  if(file_output)
+  {
+    freopen("/dev/tty", "w", stdout);
   }
 }
