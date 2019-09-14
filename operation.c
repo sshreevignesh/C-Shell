@@ -22,6 +22,7 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
   char *command1=(char *)malloc(300*sizeof(char));
   strcpy(command1,command);
   int file_output = 0;
+  int file_input = 0;
   int args;
   char tokens[10][100];
   char *token=strtok(command1," ");
@@ -37,6 +38,25 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
     tokens[args-1][strlen(tokens[args-1])-1]='\0';
   }
 
+
+  //Changing input if there is input redirection
+  for(int i=0;i<args;i++)
+  {
+    if(tokens[i][0]=='<')
+    {
+      freopen(tokens[i+1], "r", stdin);
+      file_input=1;
+      while(i<args)
+      {
+        strcpy(tokens[i],tokens[i+2]);
+        i++;
+      }
+      args=args-2;
+    }
+  }
+
+
+  //Changing output to file if there is redirection
   if(tokens[args-2][0]=='>'&&tokens[args-2][1]=='>')
   {
     file_output=1;
@@ -46,7 +66,7 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
   else if(tokens[args-2][0]=='>')
   {
     file_output=1;
-    freopen(tokens[args-1], "w+", stdout);
+    freopen(tokens[args-1], "w+", stdout) ;
     args=args-2;
   }
 
@@ -168,8 +188,17 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
       }
     }
   }
+
+  //Changing Output back to stdout
   if(file_output)
   {
+    file_output=0;
     freopen("/dev/tty", "w", stdout);
+  }
+
+  if(file_input)
+  {
+    file_input=0;
+    freopen("/dev/stdin","r",stdin);
   }
 }
