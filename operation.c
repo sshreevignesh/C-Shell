@@ -196,9 +196,11 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
     freopen("/dev/tty", "w", stdout);
   }
 
+  //Changing Input back to stdin
   if(file_input)
   {
+    // printf("kAshTapAdRa f0RmeRs sOn\n");
     file_input=0;
-    freopen("/dev/stdin","r",stdin);
+    freopen("/dev/tty","r",stdin);
   }
 }
