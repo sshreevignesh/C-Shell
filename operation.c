@@ -13,6 +13,7 @@
 #include "pinfo.c"
 #include "bonus.c"
 #include "environ.c"
+#include "jobs.c"
 
 void operate(char *command,int home,int* procid,char* procname[100],int shellid,char *home_path)
 {
@@ -141,7 +142,7 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
       comm_echo(tokens,args);
     }
 
-    else if(!strcmp(tokens[0],"exit"))
+    else if(!strcmp(tokens[0],"exit")&&!strcmp(tokens[0],"quit"))
     {
       write(fd1,command1,100);
       close(fd1);
@@ -200,6 +201,82 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
       close(fd1);
       unsetenvir(tokens[1]);
     }
+    else if(!strcmp(tokens[0],"jobs"))
+    {
+      write(fd1,command1,100);
+      close(fd1);
+      char *jobstatus=(char *)malloc(sizeof(char)*30);
+      for(int i=1;i<=procid[0];i++)
+      {
+        jobstat(procid[i],home_path,jobstatus);
+        if(!strcmp(jobstatus,"S"))
+        {
+          strcpy(jobstatus,"Sleeping");
+        }
+        else if(!strcmp(jobstatus,"Z"))
+        {
+          strcpy(jobstatus,"Zombie");
+        }
+        else if(!strcmp(jobstatus,"R"))
+        {
+          strcpy(jobstatus,"Running");
+        }
+        else if(!strcmp(jobstatus,"T"))
+        {
+          strcpy(jobstatus,"Stopped");
+        }
+        else if(!strcmp(jobstatus,"D"))
+        {
+          strcpy(jobstatus,"Waiting");
+        }
+        else if(!strcmp(jobstatus,"X"))
+        {
+          strcpy(jobstatus,"Dead");
+        }
+        else if(!strcmp(jobstatus,"K"))
+        {
+          strcpy(jobstatus,"Wakekill");
+        }
+        else if(!strcmp(jobstatus,"P"))
+        {
+          strcpy(jobstatus,"Parked");
+        }
+        printf("[%d] %s %s [%d]\n",i,jobstatus,procname[i],procid[i]);
+      }
+    }
+    else if(!strcmp(tokens[0],"kjob"))
+    {
+      int tempid=0;
+      int signalcode=0;
+      for(int j=0;j<strlen(tokens[1]);j++)
+      {
+        if(!isdigit(tokens[1][j]))
+        {
+          printf("Error: The given pid is not valid\n");
+          return;
+        }
+        tempid*=10;
+        tempid+=tokens[1][j]-'0';
+      }
+      for(int j=0;j<strlen(tokens[2]);j++)
+      {
+        if(!isdigit(tokens[2][j]))
+        {
+          printf("Error: The given Signal is not\n");
+          return;
+        }
+        signalcode*=10;
+        signalcode+=tokens[1][j]-'0';
+      }
+      kill(procid[tempid],signalcode);
+    }
+    else if(!strcmp(tokens[0],"overkill"))
+    {
+      for(int i=1;i<=procid[0];i++)
+      {
+        kill(procid[i],SIGKILL);
+      }
+    }
     else
     {
       write(fd1,command1,100);
@@ -236,6 +313,11 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
         else
         {
           procid[++procid[0]]=(int) child;
+          if(strcmp(tokens[1],"&"))
+          {
+            strcat(tokens[0]," ");
+            strcat(tokens[0],tokens[1]);
+          }
           strcpy(procname[procid[0]],tokens[0]);
         }
       }
