@@ -12,6 +12,7 @@
 #include "ls.c"
 #include "pinfo.c"
 #include "bonus.c"
+#include "environ.c"
 
 void operate(char *command,int home,int* procid,char* procname[100],int shellid,char *home_path)
 {
@@ -187,7 +188,18 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
         pinfo(shellid,home_path);
       }
     }
-
+    else if(!strcmp(tokens[0],"setenv"))
+    {
+      write(fd1,command1,100);
+      close(fd1);
+      setenvir(tokens[1],tokens[2]);
+    }
+    else if(!strcmp(tokens[0],"unsetenv"))
+    {
+      write(fd1,command1,100);
+      close(fd1);
+      unsetenvir(tokens[1]);
+    }
     else
     {
       write(fd1,command1,100);
@@ -257,9 +269,4 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
     }
     p++;
   }
-
-
-
-
-
 }
