@@ -15,6 +15,25 @@
 #include "environ.c"
 #include "jobs.c"
 
+//Flags to check whether ctrl_c nd ctrl_z are pressed
+int ctrl_c=0;
+int ctrl_z=0;
+void signalhandler(int signum)
+{
+  signal(SIGINT, signalhandler);
+  signal(SIGTSTP, signalhandler);
+  switch(signum)
+  {
+    case 20:
+    // printf("ctrl Z\n" );
+    ctrl_z=1;
+    break;
+    case 2:
+    ctrl_c=1;
+    break;
+  }
+
+}
 void operate(char *command,int home,int* procid,char* procname[100],int shellid,char *home_path)
 {
   int fd1;
@@ -142,11 +161,11 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
       comm_echo(tokens,args);
     }
 
-    else if(!strcmp(tokens[0],"exit")&&!strcmp(tokens[0],"quit"))
+    else if(!strcmp(tokens[0],"exit")||!strcmp(tokens[0],"quit"))
     {
       write(fd1,command1,100);
       close(fd1);
-      comm_exit();
+      comm_exit(shellid);
     }
 
     else if(!strcmp(tokens[0],"ls"))
@@ -246,6 +265,8 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
     }
     else if(!strcmp(tokens[0],"kjob"))
     {
+      write(fd1,command1,100);
+      close(fd1);
       int tempid=0;
       int signalcode=0;
       for(int j=0;j<strlen(tokens[1]);j++)
@@ -272,10 +293,49 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
     }
     else if(!strcmp(tokens[0],"overkill"))
     {
+      write(fd1,command1,100);
+      close(fd1);
       for(int i=1;i<=procid[0];i++)
       {
         kill(procid[i],SIGKILL);
       }
+    }
+    else if(!strcmp(tokens[0],"bg"))
+    {
+      write(fd1,command1,100);
+      close(fd1);
+      int temp=0;;
+      for(int j=0;j<strlen(tokens[1]);j++)
+      {
+        if(!isdigit(tokens[1][j]))
+        {
+          printf("Error: The given pid is not valid\n");
+          return;
+        }
+        temp*=10;
+        temp+=tokens[1][j]-'0';
+      }
+      kill(procid[temp],18);
+    }
+    else if(!strcmp(tokens[0],"fg"))
+    {
+      write(fd1,command1,100);
+      close(fd1);
+      int temp=0;;
+      for(int j=0;j<strlen(tokens[1]);j++)
+      {
+        if(!isdigit(tokens[1][j]))
+        {
+          printf("Error: The given pid is not valid\n");
+          return;
+        }
+        temp*=10;
+        temp+=tokens[1][j]-'0';
+      }
+      int status,dead;
+      do{
+        dead=waitpid(procid[temp],&status,WUNTRACED);
+      }while(procid[temp]!=dead);
     }
     else
     {
@@ -301,17 +361,26 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
         //Give error here, since it will return from execvp only if it fails
         perror("Error");
       }
+      else if(child<0)
+      {
+        perror("Invalid Fork");
+        kill(0,SIGKILL);
+      }
       else
       {
+        signal(SIGINT, signalhandler);
+        signal(SIGTSTP, signalhandler);
         pid_t dead;
         if(strcmp("&",tokens[args-1]))
         {
+          // printf("Ek Gaanv mein ek kisaan raghuthatha\n");
           do{
-            dead=waitpid(child,&status,0);
-          }while(child!=dead);
+            dead=waitpid(child,&status,WUNTRACED);
+          }while(child!=dead&&!ctrl_z&&!ctrl_c);
         }
         else
         {
+          setpgid(child,child);
           procid[++procid[0]]=(int) child;
           if(strcmp(tokens[1],"&"))
           {
@@ -320,6 +389,27 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
           }
           strcpy(procname[procid[0]],tokens[0]);
         }
+        if(ctrl_c)
+        {
+          // printf("%d\n",child);
+          kill(child,2);
+          ctrl_c=0;
+        }
+
+        if(ctrl_z)
+        {
+          // setpgid(child,child);
+          kill(child, 19);
+          procid[++procid[0]]=(int) child;
+          if(strcmp(tokens[1],"&"))
+          {
+            strcat(tokens[0]," ");
+            strcat(tokens[0],tokens[1]);
+          }
+          strcpy(procname[procid[0]],tokens[0]);
+          ctrl_z=0;
+        }
+
       }
     }
 

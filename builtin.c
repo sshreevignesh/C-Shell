@@ -30,7 +30,7 @@ void comm_echo(char tokens[10][100],int args)
   }
   printf("\n");
 }
-void comm_exit()
+void comm_exit(int pid)
 {
   kill(0,SIGKILL);
 }
