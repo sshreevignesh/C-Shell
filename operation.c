@@ -175,11 +175,16 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
       ls(tokens,args);
     }
 
-    else if(!strcmp(tokens[0],"-history"))
+    else if(!strcmp(tokens[0],"history"))
     {
       write(fd1,command1,100);
       close(fd1);
       hist(tokens[1],args,hispath);
+    }
+
+    else if(!strcmp(tokens[0],"vim")&&!strcmp(tokens[1],"&"))
+    {
+      printf("Error: Cannot run Vim in background\n");
     }
 
     else if(!strcmp(tokens[0],"pinfo"))
@@ -273,7 +278,7 @@ void operate(char *command,int home,int* procid,char* procname[100],int shellid,
       {
         if(!isdigit(tokens[1][j]))
         {
-          printf("Error: The given pid is not valid\n");
+          printf("Error: The given background number is not valid\n");
           return;
         }
         tempid*=10;
