@@ -1,4 +1,4 @@
-A Command line terminal built using C
+An attempt to recreate the Linux Command Line using CA Command line terminal built using C
 
 ### Use the following commands for running the code ##
   ```
