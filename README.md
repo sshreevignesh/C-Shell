@@ -1,8 +1,12 @@
-#use the following commands for running the code
-  1) make
-  2) ./shell
+A Command line terminal built using C
 
-#FILES
+### Use the following commands for running the code ##
+  ```
+  make
+  ./shell
+  ```
+
+### Files ##
   shell.c- Contains the main function and the main loop
   builtin.c- Contains the code for the builtin functions(cd,pwd,echo and exit)
   ls.c - Contains the code for ls function
