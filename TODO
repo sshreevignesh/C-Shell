@@ -1,3 +1,0 @@
-// Implement redirection when there is no space before/after < & >
-//Error handling in > and < , when there is an error, it should be printed on terminal and not the file, so we need to change back to stdout while printing error
-//grep for regex
